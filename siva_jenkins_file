@@ -1,0 +1,30 @@
+pipeline {
+    agent any
+    stages {
+        stage ('GIT Checkout') {
+        steps {
+            git credentialsId: '5de3bed1-efaf-4c24-bcc7-8bb47289f47a', url: 'https://github.com/venu8899/game-of-life.git'
+        }
+    }
+    
+    stage ('Build') {
+        steps {
+        sh "mvn clean install"
+        }
+    }
+    
+    stage ('Sonarscan') {
+        
+        steps {
+            
+          sh "/opt/jenkins/sonar-scanner-4.2.0.1873-linux/bin/sonar-scanner -Dsonar.host.url=http://54.80.196.126:9000 -Dsonar.projectKey=jpet -Dsonar.projectName=jpet -Dsonar.sources=. -Dsonar.java.binaries=. -Dsonar.login=dd8ed84a7d42f8227d7aca10ce4dc6bc60168aad"
+        }
+    }
+    
+    stage ('Nexus') {
+        steps {
+            nexusArtifactUploader artifacts: [[artifactId: 'gameoflife', classifier: '', file: '/root/.jenkins/workspace/jpet/gameoflife-build/target/gameoflife-build-1.0-SNAPSHOT.jar', type: 'war']], credentialsId: '2a10c0c8-8f41-4aba-afcb-4f2643da88b1', groupId: 'com.wakaleo.gameoflife', nexusUrl: 'http://54.80.196.126:8081/', nexusVersion: 'nexus3', protocol: 'http', repository: 'http://54.80.196.126:8081/repository/maven-snapshots/', version: '1.0-SNAPSHOT'
+        }
+    }
+}
+}
